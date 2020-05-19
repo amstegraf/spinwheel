@@ -20,10 +20,16 @@ import java.util.stream.Collectors;
 
 public class SpinWheelApplication {
     private static final Logger log = Logger.getLogger(SpinWheelApplication.class);
+    private static final String NO_SLEEP = "nosleep";
+    static boolean sleep = false;
+
     public static void main(String[] args) throws InterruptedException {
-        Thread.sleep(1000);
-        //todo step one read entries, count & store
         List<String> entries = Arrays.asList(args).stream().map(e -> e.toUpperCase()).collect(Collectors.toList());
+        sleep = !entries.contains(NO_SLEEP);
+
+        if (!sleep) {
+            entries.remove(NO_SLEEP);
+        }
 
         if (entries.isEmpty()) {
             try(
@@ -52,14 +58,14 @@ public class SpinWheelApplication {
         printLineBreak();
 
         log.info(String.format("Shuffles to do %d", shuffles));
-        Thread.sleep(2000);
+        if (sleep) Thread.sleep(2000);
         shuffle(entries, shuffles);
         printLineBreak();
 
         //todo pick another random on number of draws & get user
         int numberOfDrawsToWin = getARandom(3, 10);
         log.info(String.format("Number of occurrences to win %d", numberOfDrawsToWin));
-        Thread.sleep(2000);
+        if (sleep) Thread.sleep(2000);
         printLineBreak();
 
         int draw = 0;
@@ -74,22 +80,22 @@ public class SpinWheelApplication {
             printLineBreak();
         }
 
-        Thread.sleep(500);
+        if (sleep) Thread.sleep(500);
         log.info("LADIES AND GENTLEMAN WE HAVE A WINNER....");
-        Thread.sleep(500);
+        if (sleep) Thread.sleep(500);
         log.info("AND THE WINNER IS....");
-        Thread.sleep(1000);
+        if (sleep) Thread.sleep(1000);
         log.info("ALMOST THERE....");
-        Thread.sleep(1000);
+        if (sleep) Thread.sleep(1000);
         log.info("THE ONE AND ONLY....");
-        Thread.sleep(1000);
+        if (sleep) Thread.sleep(1000);
         log.info("HERE HE IS....");
-        Thread.sleep(1000);
+        if (sleep) Thread.sleep(1000);
 
         log.info(String.format("THE WINNER IS: %s", getEntryKeyWithMax(picks)));
 
         printLineBreak();
-        Thread.sleep(3000);
+        if (sleep) Thread.sleep(3000);
         log.info(String.format("And the picks were: %s", sortByValue(picks)));
         printParticipantsPlaces(picks, draw);
     }
@@ -97,7 +103,7 @@ public class SpinWheelApplication {
     private static void shuffle(List entries, int shuffles) throws InterruptedException {
         for (int i = 1; i <= shuffles; i++) {
             Collections.shuffle(entries);
-            Thread.sleep(200);
+            if (sleep) Thread.sleep(200);
             //log.info(String.format("Shuffle %d %s", i, entries)); //todo re-enable
         }
     }
