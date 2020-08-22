@@ -77,11 +77,11 @@ public class SpinWheelApplication {
             picks.put(entry, 0);
         }
 
-        log.info(String.format("Initial entries %s", entries));
+        log.info(String.format("Initial entries %s", entries.size()));
         int shuffles = getARandom(MIN_SHUFFLES, MAX_SHUFFLES);
         printLineBreak();
 
-        log.info(String.format("Shuffles to do %d", shuffles));
+        log.info(String.format("Shuffles to do initially %d", shuffles));
         trySleep();
         shuffle(entries, shuffles);
         printLineBreak();
@@ -120,7 +120,7 @@ public class SpinWheelApplication {
 
         printLineBreak();
         trySleep();
-        log.info(String.format("And the picks were: %s", sortByValue(picks)));
+//        log.info(String.format("And the picks were: %s", sortByValue(picks)));
         printParticipantsPlaces(picks, draw);
     }
 
@@ -129,7 +129,7 @@ public class SpinWheelApplication {
             Collections.shuffle(entries);
             //log.info(String.format("Shuffle %d %s", i, entries)); //todo re-enable
         }
-        trySleep(SLEEP_PERIOD);
+        trySleep(SLEEP_PERIOD/3);
     }
 
     public static <K, V extends Comparable<V>> V getCurrentMaxValue(Map<K, V> map) {
@@ -176,7 +176,7 @@ public class SpinWheelApplication {
                 break;
             }
 
-            log.info(String.format("%s was on %s place with a %d%% hit rate and %s hits", currentMaxKey, i, hitPercentage, hits));
+            log.info(String.format("%s was on %s place with %s hits", currentMaxKey, i, hits));
             picks.remove(currentMaxKey);
 
             if (i >= 10) {
