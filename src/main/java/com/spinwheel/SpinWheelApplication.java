@@ -97,9 +97,9 @@ public class SpinWheelApplication {
             draw++;
 
             int shuffleAgain = getARandom(MIN_SHUFFLES, MAX_SHUFFLES);
-            log.info(String.format("Pick no %d done & shuffle %d times", draw, shuffleAgain));
             shuffle(entries, shuffleAgain);
             String currentPickedEntry = entries.get(getARandom(0, entries.size()-1));
+            log.info(String.format("Pick no %d done (%s) & shuffle %d more times", draw, currentPickedEntry, shuffleAgain));
             picks.put(currentPickedEntry, picks.get(currentPickedEntry) + 1);
             printLineBreak();
         }
