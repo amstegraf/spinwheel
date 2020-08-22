@@ -3,6 +3,8 @@ package com.spinwheel;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,7 +44,7 @@ public class SpinWheelApplication {
         FILE_PATH = System.getProperty("FILE_PATH");
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
         List<String> entries = Arrays.asList(args).stream().map(e -> e.toUpperCase()).collect(Collectors.toList());
 
         if (entries.isEmpty()) {
@@ -51,9 +53,11 @@ public class SpinWheelApplication {
                 throw new RuntimeException("File path of the names to be drawn must be provided");
             }
 
+            File initialFile = new File(FILE_PATH);
+
             try(
-                InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("names.txt");
-                BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))
+                    InputStream inputStream = new FileInputStream(initialFile);
+                    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))
             ) {
                 String line;
 
@@ -63,6 +67,7 @@ public class SpinWheelApplication {
                 }
             } catch (IOException e) {
                 log.error(e);
+                throw e;
             }
         }
 
