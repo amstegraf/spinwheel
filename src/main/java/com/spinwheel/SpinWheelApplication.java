@@ -16,22 +16,41 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class SpinWheelApplication {
     private static final Logger log = Logger.getLogger(SpinWheelApplication.class);
-    private static final String NO_SLEEP = "nosleep";
-    static boolean sleep = false;
+
+    private final static boolean SLEEP_ENABLED;
+    private final static int SLEEP_PERIOD;
+    private final static int MIN_SHUFFLES;
+    private final static int MAX_SHUFFLES;
+    private final static int MIN_WINNING_DRAWS;
+    private final static int MAX_WINNING_DRAWS;
+
+    private final static String FILE_PATH;
+
+    static {
+        SLEEP_ENABLED = Boolean.valueOf(System.getProperty("SLEEP_ENABLED", "false"));
+        SLEEP_PERIOD = (int) TimeUnit.SECONDS.toMillis(Long.valueOf(System.getProperty("SLEEP_PERIOD", "1")));
+        MIN_SHUFFLES = Integer.valueOf(System.getProperty("MIN_SHUFFLES", "1"));
+        MAX_SHUFFLES = Integer.valueOf(System.getProperty("MAX_SHUFFLES", "10"));
+        MIN_WINNING_DRAWS = Integer.valueOf(System.getProperty("MIN_WINNING_DRAWS", "1"));
+        MAX_WINNING_DRAWS = Integer.valueOf(System.getProperty("MAX_WINNING_DRAWS", "10"));
+
+        FILE_PATH = System.getProperty("FILE_PATH");
+    }
 
     public static void main(String[] args) throws InterruptedException {
         List<String> entries = Arrays.asList(args).stream().map(e -> e.toUpperCase()).collect(Collectors.toList());
-        sleep = !entries.contains(NO_SLEEP);
-
-        if (!sleep) {
-            entries.remove(NO_SLEEP);
-        }
 
         if (entries.isEmpty()) {
+
+            if (FILE_PATH == null || FILE_PATH.isEmpty()) {
+                throw new RuntimeException("File path of the names to be drawn must be provided");
+            }
+
             try(
                 InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("names.txt");
                 BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))
@@ -54,25 +73,25 @@ public class SpinWheelApplication {
         }
 
         log.info(String.format("Initial entries %s", entries));
-        int shuffles = getARandom(5, 20);
+        int shuffles = getARandom(MIN_SHUFFLES, MAX_SHUFFLES);
         printLineBreak();
 
         log.info(String.format("Shuffles to do %d", shuffles));
-        if (sleep) Thread.sleep(2000);
+        trySleep();
         shuffle(entries, shuffles);
         printLineBreak();
 
         //todo pick another random on number of draws & get user
-        int numberOfDrawsToWin = getARandom(3, 10);
+        int numberOfDrawsToWin = getARandom(MIN_WINNING_DRAWS, MAX_WINNING_DRAWS);
         log.info(String.format("Number of occurrences to win %d", numberOfDrawsToWin));
-        if (sleep) Thread.sleep(2000);
+        trySleep();
         printLineBreak();
 
         int draw = 0;
         while (getCurrentMaxValue(picks) < numberOfDrawsToWin) {
             draw++;
-            Thread.sleep(200);
-            int shuffleAgain = getARandom(1, 5);
+
+            int shuffleAgain = getARandom(MIN_SHUFFLES, MAX_SHUFFLES);
             log.info(String.format("Pick no %d done & shuffle %d times", draw, shuffleAgain));
             shuffle(entries, shuffleAgain);
             String currentPickedEntry = entries.get(getARandom(0, entries.size()-1));
@@ -80,22 +99,22 @@ public class SpinWheelApplication {
             printLineBreak();
         }
 
-        if (sleep) Thread.sleep(500);
+        trySleep();
         log.info("LADIES AND GENTLEMAN WE HAVE A WINNER....");
-        if (sleep) Thread.sleep(500);
+        trySleep();
         log.info("AND THE WINNER IS....");
-        if (sleep) Thread.sleep(1000);
+        trySleep();
         log.info("ALMOST THERE....");
-        if (sleep) Thread.sleep(1000);
+        trySleep();
         log.info("THE ONE AND ONLY....");
-        if (sleep) Thread.sleep(1000);
+        trySleep();
         log.info("HERE HE IS....");
-        if (sleep) Thread.sleep(1000);
+        trySleep();
 
         log.info(String.format("THE WINNER IS: %s", getEntryKeyWithMax(picks)));
 
         printLineBreak();
-        if (sleep) Thread.sleep(3000);
+        trySleep();
         log.info(String.format("And the picks were: %s", sortByValue(picks)));
         printParticipantsPlaces(picks, draw);
     }
@@ -103,9 +122,9 @@ public class SpinWheelApplication {
     private static void shuffle(List entries, int shuffles) throws InterruptedException {
         for (int i = 1; i <= shuffles; i++) {
             Collections.shuffle(entries);
-            if (sleep) Thread.sleep(200);
             //log.info(String.format("Shuffle %d %s", i, entries)); //todo re-enable
         }
+        trySleep(SLEEP_PERIOD);
     }
 
     public static <K, V extends Comparable<V>> V getCurrentMaxValue(Map<K, V> map) {
@@ -132,13 +151,27 @@ public class SpinWheelApplication {
         log.info("--------------------------------------------");
     }
 
+    private static void trySleep() throws InterruptedException {
+        trySleep(SLEEP_PERIOD);
+    }
+
+    private static void trySleep(int period) throws InterruptedException {
+        if (SLEEP_ENABLED) Thread.sleep(period);
+    }
+
     private static void printParticipantsPlaces(Map<String, Integer> picksInput, int totalDraws) {
         Map<String, Integer> picks = new HashMap<>(picksInput);
 
         for (int i = 1; i <= picksInput.size(); i++) {
             String currentMaxKey = getEntryKeyWithMax(picks);
             int hits = getCurrentMaxValue(picks);
-            log.info(String.format("%s was on %s place with a %d%% hit rate and %s hits", currentMaxKey, i, (int)(((double)hits/totalDraws)*100), hits));
+            int hitPercentage = (int) (((double) hits / totalDraws) * 100);
+
+            if (hits < 1) {
+                break;
+            }
+
+            log.info(String.format("%s was on %s place with a %d%% hit rate and %s hits", currentMaxKey, i, hitPercentage, hits));
             picks.remove(currentMaxKey);
 
             if (i >= 10) {
